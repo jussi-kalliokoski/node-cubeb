@@ -45,7 +45,18 @@ CubebStream::~CubebStream () {
 	statecb.Dispose();
 }
 
-void CubebStream::stop () {
+int CubebStream::stop () {
+	int r = cubeb_stream_stop(stream);
+	Unref();
+
+	return r;
+}
+
+int CubebStream::start () {
+	int r = cubeb_stream_start(stream);
+	Ref();
+
+	return r;
 }
 
 void CubebStream::Initialize (Handle<Object> target) {
@@ -56,6 +67,8 @@ void CubebStream::Initialize (Handle<Object> target) {
 	constructor_template->InstanceTemplate()->SetInternalFieldCount(1);
 	constructor_template->SetClassName(String::NewSymbol("CubebStream"));
 
+	NODE_SET_PROTOTYPE_METHOD(constructor_template, "stop", Stop);
+	NODE_SET_PROTOTYPE_METHOD(constructor_template, "start", Start);
 	target->Set(String::NewSymbol("Stream"), constructor_template->GetFunction());
 }
 
@@ -94,6 +107,30 @@ Handle<Value> CubebStream::New (const Arguments &args) {
 	cubebstream->Wrap(args.This());
 
 	return args.This();
+}
+
+Handle<Value> CubebStream::Stop (const Arguments &args) {
+	HandleScope scope;
+
+	CubebStream *nodecubeb = ObjectWrap::Unwrap<CubebStream>(args.This());
+
+	if (nodecubeb->stop() != CUBEB_OK) {
+		return ThrowException(Exception::Error(String::New("Could not stop the stream")));
+	}
+
+	return Undefined();
+}
+
+Handle<Value> CubebStream::Start (const Arguments &args) {
+	HandleScope scope;
+
+	CubebStream *nodecubeb = ObjectWrap::Unwrap<CubebStream>(args.This());
+
+	if (nodecubeb->start() != CUBEB_OK) {
+		return ThrowException(Exception::Error(String::New("Could not start the stream")));
+	}
+
+	return Undefined();
 }
 
 long CubebStream::DataCB (cubeb_stream *stream, void *user, void *buffer, long nframes) {

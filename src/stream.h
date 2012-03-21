@@ -35,11 +35,14 @@ public:
 		v8::Persistent<v8::Function> ddatacb, v8::Persistent<v8::Function> sstatecb);
 	~CubebStream();
 
-	void stop();
+	int stop();
+	int start();
 
 	static void Initialize (v8::Handle<v8::Object> target);
 
 	static v8::Handle<v8::Value> New (const v8::Arguments &args);
+	static v8::Handle<v8::Value> Start (const v8::Arguments &args);
+	static v8::Handle<v8::Value> Stop (const v8::Arguments &args);
 
 	static long DataCB(cubeb_stream *stream, void *user, void *buffer, long nframes);
 	static int StateCB(cubeb_stream *stream, void *user, cubeb_state state);
