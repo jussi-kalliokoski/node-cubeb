@@ -1,0 +1,38 @@
+{
+	"name": "node-cubeb",
+	"version": "0.1.0",
+	"main": "node-cubeb",
+	"description": "",
+	"license": "MIT",
+
+	"keywords": [
+		"c++",
+		"audio",
+		"cubeb",
+		"mozilla"
+	],
+
+	"author": {
+		"name": "Jussi Kalliokoski",
+		"email": "jussi.kalliokoski@gmail.com",
+		"web": "http://www.avd.io",
+		"twitter": "quinnirill"
+	}, 
+
+	"repository": {
+		"type": "git",
+		"url": "git@github.com:jussi-kalliokoski/node-cubeb"
+	}, 
+
+	"directories": {
+		"tests": "tests"
+	},
+
+	"engines": {
+		"node": ">=0.6.0"
+	},
+
+	"scripts": {
+		"install": "node-waf configure build"
+	}
+}
