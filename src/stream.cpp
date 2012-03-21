@@ -152,7 +152,7 @@ long CubebStream::DataCB (cubeb_stream *stream, void *user, void *buffer, long n
 	Buffer *jsbuffer = Buffer::New((char *)buffer, (size_t)nframes, UnrefBufferCB, NULL);
 
 	Local<Value> argv[2];
-	argv[0] = Integer::New(nframes); //Local<Buffer>::New(jsbuffer);
+	argv[0] = Local<Value>::New(jsbuffer->handle_);
 	argv[1] = Integer::New(nframes);
 
 	TryCatch try_catch;
