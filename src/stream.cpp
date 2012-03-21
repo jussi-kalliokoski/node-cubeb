@@ -11,11 +11,11 @@ using namespace v8;
 using namespace node;
 
 CubebStream::CubebStream
-(cubeb *cctx, const char *nname, unsigned int cc, unsigned int sr, unsigned int bs, unsigned int lt) :
-ctx(cctx), name(nname), channelCount(cc), sampleRate(sr), bufferSize(bs), latency(lt) {
+(cubeb *cctx, const char *nname, cubeb_sample_format sf, unsigned int cc, unsigned int sr, unsigned int bs, unsigned int lt, Persistent<Function> ddatacb, Persistent<Function> sstatecb) :
+ctx(cctx), name(nname), channelCount(cc), sampleRate(sr), bufferSize(bs), latency(lt), statecb(sstatecb), datacb(ddatacb) {
 	cubeb_stream_params params;
 
-	params.format = CUBEB_SAMPLE_FLOAT32NE;
+	params.format = sampleFormat;
 	params.rate = sampleRate;
 	params.channels = channelCount;
 
@@ -40,6 +40,9 @@ CubebStream::~CubebStream () {
 	if (user_data != NULL) {
 		free(user_data);
 	}
+
+	datacb.Dispose();
+	statecb.Dispose();
 }
 
 void CubebStream::stop () {
@@ -67,18 +70,22 @@ Handle<Value> CubebStream::New (const Arguments &args) {
 
 	String::Utf8Value str(args[1]);
 
-	unsigned int cc = args[2]->Int32Value();
-	unsigned int sr = args[3]->Int32Value();
-	unsigned int bs = args[4]->Int32Value();
-	unsigned int lt = args[5]->Int32Value();
+	cubeb_sample_format sf = (cubeb_sample_format) args[2]->Int32Value();
+	unsigned int cc = args[3]->Int32Value();
+	unsigned int sr = args[4]->Int32Value();
+	unsigned int bs = args[5]->Int32Value();
+	unsigned int lt = args[6]->Int32Value();
+
+	Local<Function> data_cb = Local<Function>::Cast(args[7]);
+	Local<Function> state_cb = Local<Function>::Cast(args[8]);
 
 	CubebStream *cubebstream = new CubebStream(
 		nodecubeb->ctx,
 		ToCString(str),
-		cc, sr, bs, lt
+		sf, cc, sr, bs, lt,
+		Persistent<Function>::New(data_cb),
+		Persistent<Function>::New(state_cb)
 	);
-
-	cubebstream->JSObject = args.This();
 
 	if (cubebstream->error_code != CUBEB_OK) {
 		return ThrowException(Exception::ReferenceError(String::New("Error initializing stream")));
@@ -96,17 +103,21 @@ long CubebStream::DataCB (cubeb_stream *stream, void *user, void *buffer, long n
 
 	CubebStream *cs = u->stream;
 
-	Handle<Object> obj = cs->JSObject->ToObject();
-	if (!obj->IsFunction()) {
-		// FIXME: This isn't a good way to handle the problem.
+	Local<Value> argv[2];
+//FIXME: this should be an ArrayBuffer referring to the `buffer`
+	argv[0] = Integer::New(nframes);
+	argv[1] = Integer::New(nframes);
+
+	TryCatch try_catch;
+
+	Local<Value> retval = cs->datacb->Call(Context::GetCurrent()->Global(), 2, argv);
+
+	if (try_catch.HasCaught()) {
+		FatalException(try_catch);
 		return CUBEB_ERROR;
 	}
 
-	Local<Function> cb = Local<Function>::Cast(obj->Get(String::New("ondata")));
-
-	// TODO: Call the function with a Float32Array as an argument.
-
-	return CUBEB_OK;
+	return retval->Int32Value();
 }
 
 int CubebStream::StateCB(cubeb_stream *stream, void *user, cubeb_state state) {
@@ -115,17 +126,19 @@ int CubebStream::StateCB(cubeb_stream *stream, void *user, cubeb_state state) {
 
 	CubebStream *cs = u->stream;
 
-	Handle<Object> obj = cs->JSObject->ToObject();
-	if (!obj->IsFunction()) {
-		// FIXME: This isn't a good way to handle the problem.
+	Local<Value> argv[1];
+	argv[0] = Integer::New(state);
+
+	TryCatch try_catch;
+
+	Local<Value> retval = cs->statecb->Call(Context::GetCurrent()->Global(), 2, argv);
+
+	if (try_catch.HasCaught()) {
+		FatalException(try_catch);
 		return CUBEB_ERROR;
 	}
 
-	Local<Function> cb = Local<Function>::Cast(obj->Get(String::New("onstatechange")));
-
-	// TODO: Call the function with the state as its argument and return the output of the function.
-	
-	return CUBEB_OK;
+	return retval->Int32Value();
 }
 
 Persistent<FunctionTemplate> CubebStream::constructor_template;

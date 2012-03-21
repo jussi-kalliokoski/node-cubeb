@@ -14,22 +14,25 @@ public:
 		CubebStream *stream;
 	};
 
-	v8::Handle<v8::Value> JSObject;
-
 	cubeb *ctx;
 	cubeb_stream *stream;
 
 	char const *name;
+	cubeb_sample_format sampleFormat;
 	unsigned int channelCount;
 	unsigned int sampleRate;
 	unsigned int bufferSize;
 	unsigned int latency;
 
+	v8::Persistent<v8::Function> statecb;
+	v8::Persistent<v8::Function> datacb;
+
 	int error_code;
 
 	struct cb_user_data *user_data;
 
-	CubebStream(cubeb *cctx, const char *nname, unsigned int cc, unsigned int sr, unsigned int bs, unsigned int lt);
+	CubebStream(cubeb *cctx, const char *nname, cubeb_sample_format sf, unsigned int cc, unsigned int sr, unsigned int bs, unsigned int lt,
+		v8::Persistent<v8::Function> ddatacb, v8::Persistent<v8::Function> sstatecb);
 	~CubebStream();
 
 	void stop();
