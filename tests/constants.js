@@ -1,17 +1,4 @@
-var DEBUG = console.error.bind(console);
-
-function ASSERT (assertion, message, code) {
-	if (!assertion) {
-		DEBUG("Assertion failed:", message);
-		process.exit(typeof code === 'undefined' ? 1 : code);
-	}
-}
-
-function TEST_CONSTANT (name) {
-	ASSERT(typeof Cubeb[name] === 'number', 'typeof ' + name + ' === "number"');
-}
-
-var Cubeb = require('../build/Release/node-cubeb');
+require('./tools/testing')
 
 DEBUG("Asserting constants...")
 
