@@ -17,7 +17,7 @@ def configure(conf):
 def build(bld):
   obj = bld.new_task_gen("cxx", "shlib", "node_addon")
   obj.target = "node-cubeb"
-  obj.source = "src/common.cpp src/context.cpp src/stream.cpp src/module.cpp"
+  obj.source = "src/common.cpp src/constants.cpp src/context.cpp src/stream.cpp src/module.cpp"
   obj.uselib = "cubeb"
   obj.linkflags = ['-lcubeb']
   obj.cxxflags = ["-D_FILE_OFFSET_BITS=64", "-D_LARGEFILE_SOURCE", "-Wall"]
