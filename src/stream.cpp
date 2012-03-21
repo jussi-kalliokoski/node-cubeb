@@ -12,7 +12,7 @@ using namespace node;
 
 CubebStream::CubebStream
 (cubeb *cctx, const char *nname, cubeb_sample_format sf, unsigned int cc, unsigned int sr, unsigned int bs, unsigned int lt, Persistent<Function> ddatacb, Persistent<Function> sstatecb) :
-ctx(cctx), name(nname), channelCount(cc), sampleRate(sr), bufferSize(bs), latency(lt), statecb(sstatecb), datacb(ddatacb) {
+ctx(cctx), name(nname), sampleFormat(sf), channelCount(cc), sampleRate(sr), bufferSize(bs), latency(lt), statecb(sstatecb), datacb(ddatacb) {
 	cubeb_stream_params params;
 
 	params.format = sampleFormat;
@@ -83,11 +83,27 @@ Handle<Value> CubebStream::New (const Arguments &args) {
 
 	String::Utf8Value str(args[1]);
 
-	cubeb_sample_format sf = (cubeb_sample_format) args[2]->Int32Value();
+	unsigned int ssf = args[2]->Int32Value();
 	unsigned int cc = args[3]->Int32Value();
 	unsigned int sr = args[4]->Int32Value();
 	unsigned int bs = args[5]->Int32Value();
 	unsigned int lt = args[6]->Int32Value();
+
+	cubeb_sample_format sf;
+
+/* Crappy hack to avoid casting to an enum */
+	switch (ssf) {
+	case CUBEB_SAMPLE_S16LE:
+		sf = CUBEB_SAMPLE_S16LE; break;
+	case CUBEB_SAMPLE_S16BE:
+		sf = CUBEB_SAMPLE_S16BE; break;
+	case CUBEB_SAMPLE_FLOAT32BE:
+		sf = CUBEB_SAMPLE_FLOAT32BE; break;
+	case CUBEB_SAMPLE_FLOAT32LE:
+		sf = CUBEB_SAMPLE_FLOAT32LE; break;
+	default:
+		return ThrowException(Exception::Error(String::New("Invalid sample format")));
+	}
 
 	Local<Function> data_cb = Local<Function>::Cast(args[7]);
 	Local<Function> state_cb = Local<Function>::Cast(args[8]);
