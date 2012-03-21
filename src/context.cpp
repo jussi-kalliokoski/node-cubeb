@@ -45,6 +45,8 @@ Handle<Value> CubebContext::New (const Arguments &args) {
 		return ThrowException(Exception::ReferenceError(String::New("Error initializing cubeb library")));
 	}
 
+	DEFINE_V8_CONST(args.This(), "name", nodecubeb->name, String);
+
 	nodecubeb->Wrap(args.This());
 
 	return args.This();

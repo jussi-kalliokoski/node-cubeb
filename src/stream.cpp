@@ -104,6 +104,13 @@ Handle<Value> CubebStream::New (const Arguments &args) {
 		return ThrowException(Exception::ReferenceError(String::New("Error initializing stream")));
 	}
 
+	DEFINE_V8_CONST(args.This(), "name", cubebstream->name, String);
+	DEFINE_V8_CONST(args.This(), "sampleFormat", cubebstream->sampleFormat, Integer);
+	DEFINE_V8_CONST(args.This(), "channelCount", cubebstream->channelCount, Integer);
+	DEFINE_V8_CONST(args.This(), "sampleRate", cubebstream->sampleRate, Integer);
+	DEFINE_V8_CONST(args.This(), "bufferSize", cubebstream->bufferSize, Integer);
+	DEFINE_V8_CONST(args.This(), "latency", cubebstream->latency, Integer);
+
 	cubebstream->Wrap(args.This());
 
 	return args.This();
@@ -145,7 +152,7 @@ long CubebStream::DataCB (cubeb_stream *stream, void *user, void *buffer, long n
 	Buffer *jsbuffer = Buffer::New((char *)buffer, (size_t)nframes, UnrefBufferCB, NULL);
 
 	Local<Value> argv[2];
-	argv[0] = jsbuffer->handle_;
+	argv[0] = Integer::New(nframes); //Local<Buffer>::New(jsbuffer);
 	argv[1] = Integer::New(nframes);
 
 	TryCatch try_catch;
