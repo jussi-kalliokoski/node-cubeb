@@ -133,6 +133,8 @@ Handle<Value> CubebStream::Start (const Arguments &args) {
 	return Undefined();
 }
 
+void CubebStream::UnrefBufferCB (char *data, void *hint) {}
+
 long CubebStream::DataCB (cubeb_stream *stream, void *user, void *buffer, long nframes) {
 	HandleScope scope;
 
@@ -140,9 +142,10 @@ long CubebStream::DataCB (cubeb_stream *stream, void *user, void *buffer, long n
 
 	CubebStream *cs = u->stream;
 
+	Buffer *jsbuffer = Buffer::New((char *)buffer, (size_t)nframes, UnrefBufferCB, NULL);
+
 	Local<Value> argv[2];
-//FIXME: this should be an ArrayBuffer referring to the `buffer`
-	argv[0] = Integer::New(nframes);
+	argv[0] = jsbuffer->handle_;
 	argv[1] = Integer::New(nframes);
 
 	TryCatch try_catch;

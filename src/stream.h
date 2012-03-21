@@ -44,6 +44,7 @@ public:
 	static v8::Handle<v8::Value> Start (const v8::Arguments &args);
 	static v8::Handle<v8::Value> Stop (const v8::Arguments &args);
 
+	static void UnrefBufferCB(char *data, void *hint);
 	static long DataCB(cubeb_stream *stream, void *user, void *buffer, long nframes);
 	static int StateCB(cubeb_stream *stream, void *user, cubeb_state state);
 };
