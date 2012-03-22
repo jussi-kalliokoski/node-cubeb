@@ -161,6 +161,7 @@ void CubebStream::UnrefBufferCB (char *data, void *hint) {}
 long CubebStream::DataCB (cubeb_stream *stream, void *user, void *buffer, long nframes) {
 	struct CubebStream::cb_user_data *u = (struct CubebStream::cb_user_data *)user;
 
+/* FIXME: segfaults here. Weird. */
 	HandleScope scope;
 
 	CubebStream *cs = u->stream;
@@ -195,6 +196,7 @@ int CubebStream::StateCB(cubeb_stream *stream, void *user, cubeb_state state) {
 
 	TryCatch try_catch;
 
+/* FIXME: segfaults here. Weird. */
 	Local<Value> retval = cs->statecb->Call(Context::GetCurrent()->Global(), 2, argv);
 
 	if (try_catch.HasCaught()) {
