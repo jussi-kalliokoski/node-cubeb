@@ -19,7 +19,7 @@ def build(bld):
   obj.target = "node-cubeb"
   obj.source = "src/common.cpp src/constants.cpp src/context.cpp src/stream.cpp src/module.cpp"
   obj.uselib = "cubeb"
-  obj.linkflags = ['-lcubeb']
+  obj.linkflags = ['-lcubeb', '-lpulse']
   obj.cxxflags = ["-D_FILE_OFFSET_BITS=64", "-D_LARGEFILE_SOURCE", "-Wall"]
 
 def shutdown():

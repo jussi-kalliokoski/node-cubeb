@@ -159,9 +159,9 @@ Handle<Value> CubebStream::Start (const Arguments &args) {
 void CubebStream::UnrefBufferCB (char *data, void *hint) {}
 
 long CubebStream::DataCB (cubeb_stream *stream, void *user, void *buffer, long nframes) {
-	HandleScope scope;
-
 	struct CubebStream::cb_user_data *u = (struct CubebStream::cb_user_data *)user;
+
+	HandleScope scope;
 
 	CubebStream *cs = u->stream;
 
@@ -184,8 +184,9 @@ long CubebStream::DataCB (cubeb_stream *stream, void *user, void *buffer, long n
 }
 
 int CubebStream::StateCB(cubeb_stream *stream, void *user, cubeb_state state) {
-
 	struct CubebStream::cb_user_data *u = (struct CubebStream::cb_user_data *)user;
+
+	HandleScope scope;
 
 	CubebStream *cs = u->stream;
 
