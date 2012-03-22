@@ -21,7 +21,7 @@
 
 	"repository": {
 		"type": "git",
-		"url": "git@github.com:jussi-kalliokoski/node-cubeb"
+		"url": "git://github.com/jussi-kalliokoski/node-cubeb.git"
 	}, 
 
 	"directories": {
