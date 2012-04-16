@@ -10,9 +10,19 @@
 using namespace v8;
 using namespace node;
 
-CubebStream::CubebStream
-(cubeb *cctx, const char *nname, cubeb_sample_format sf, unsigned int cc, unsigned int sr, unsigned int bs, unsigned int lt, Persistent<Function> ddatacb, Persistent<Function> sstatecb) :
-ctx(cctx), name(nname), sampleFormat(sf), channelCount(cc), sampleRate(sr), bufferSize(bs), latency(lt), statecb(sstatecb), datacb(ddatacb) {
+CubebStream::CubebStream (cubeb *cctx, const char *nname, cubeb_sample_format sf,
+		unsigned int cc, unsigned int sr, unsigned int bs, unsigned int lt,
+		Persistent<Function> ddatacb, Persistent<Function> sstatecb) :
+ctx(cctx),
+name(nname),
+sampleFormat(sf),
+channelCount(cc),
+sampleRate(sr),
+bufferSize(bs),
+latency(lt),
+state(CUBEB_STATE_ERROR),
+statecb(sstatecb),
+datacb(ddatacb) {
 	cubeb_stream_params params;
 
 	params.format = sampleFormat;
@@ -69,6 +79,7 @@ void CubebStream::Initialize (Handle<Object> target) {
 
 	NODE_SET_PROTOTYPE_METHOD(constructor_template, "stop", Stop);
 	NODE_SET_PROTOTYPE_METHOD(constructor_template, "start", Start);
+	SET_V8_PROTOTYPE_GETTER(constructor_template, "state", GetState);
 	target->Set(String::NewSymbol("Stream"), constructor_template->GetFunction());
 }
 
@@ -132,12 +143,20 @@ Handle<Value> CubebStream::New (const Arguments &args) {
 	return args.This();
 }
 
+Handle<Value> CubebStream::GetState (Local<String> property, const AccessorInfo& info) {
+	Local<Object> self = info.Holder();
+
+	CubebStream *cs = ObjectWrap::Unwrap<CubebStream>(self);
+
+	return Integer::New(cs->state);
+}
+
 Handle<Value> CubebStream::Stop (const Arguments &args) {
 	HandleScope scope;
 
-	CubebStream *nodecubeb = ObjectWrap::Unwrap<CubebStream>(args.This());
+	CubebStream *cs = ObjectWrap::Unwrap<CubebStream>(args.This());
 
-	if (nodecubeb->stop() != CUBEB_OK) {
+	if (cs->stop() != CUBEB_OK) {
 		return ThrowException(Exception::Error(String::New("Could not stop the stream")));
 	}
 
@@ -147,9 +166,9 @@ Handle<Value> CubebStream::Stop (const Arguments &args) {
 Handle<Value> CubebStream::Start (const Arguments &args) {
 	HandleScope scope;
 
-	CubebStream *nodecubeb = ObjectWrap::Unwrap<CubebStream>(args.This());
+	CubebStream *cs = ObjectWrap::Unwrap<CubebStream>(args.This());
 
-	if (nodecubeb->start() != CUBEB_OK) {
+	if (cs->start() != CUBEB_OK) {
 		return ThrowException(Exception::Error(String::New("Could not start the stream")));
 	}
 
@@ -161,50 +180,20 @@ void CubebStream::UnrefBufferCB (char *data, void *hint) {}
 long CubebStream::DataCB (cubeb_stream *stream, void *user, void *buffer, long nframes) {
 	struct CubebStream::cb_user_data *u = (struct CubebStream::cb_user_data *)user;
 
-/* FIXME: segfaults here. Weird. */
-	HandleScope scope;
+	/* TODO: Invoke callback and fill data here */
 
-	CubebStream *cs = u->stream;
-
-	Buffer *jsbuffer = Buffer::New((char *)buffer, (size_t)nframes, UnrefBufferCB, NULL);
-
-	Local<Value> argv[2];
-	argv[0] = Local<Value>::New(jsbuffer->handle_);
-	argv[1] = Integer::New(nframes);
-
-	TryCatch try_catch;
-
-	Local<Value> retval = cs->datacb->Call(Context::GetCurrent()->Global(), 2, argv);
-
-	if (try_catch.HasCaught()) {
-		FatalException(try_catch);
-		return CUBEB_ERROR;
-	}
-
-	return retval->Int32Value();
+	return nframes;
 }
 
-int CubebStream::StateCB(cubeb_stream *stream, void *user, cubeb_state state) {
+int CubebStream::StateCB (cubeb_stream *stream, void *user, cubeb_state state) {
 	struct CubebStream::cb_user_data *u = (struct CubebStream::cb_user_data *)user;
 
-	HandleScope scope;
-
 	CubebStream *cs = u->stream;
+	cs->state = state;
 
-	Local<Value> argv[1];
-	argv[0] = Integer::New(state);
+	/* TODO: Invoke callback */
 
-	TryCatch try_catch;
-
-/* FIXME: segfaults here. Weird. */
-	Local<Value> retval = cs->statecb->Call(Context::GetCurrent()->Global(), 2, argv);
-
-	if (try_catch.HasCaught()) {
-		FatalException(try_catch);
-		return CUBEB_ERROR;
-	}
-
-	return retval->Int32Value();
+	return CUBEB_OK;
 }
 
 Persistent<FunctionTemplate> CubebStream::constructor_template;

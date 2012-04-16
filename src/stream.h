@@ -23,6 +23,7 @@ public:
 	unsigned int sampleRate;
 	unsigned int bufferSize;
 	unsigned int latency;
+	cubeb_state state;
 
 	v8::Persistent<v8::Function> statecb;
 	v8::Persistent<v8::Function> datacb;
@@ -43,6 +44,8 @@ public:
 	static v8::Handle<v8::Value> New (const v8::Arguments &args);
 	static v8::Handle<v8::Value> Start (const v8::Arguments &args);
 	static v8::Handle<v8::Value> Stop (const v8::Arguments &args);
+
+	static v8::Handle<v8::Value> GetState (v8::Local<v8::String> property, const v8::AccessorInfo &info);
 
 	static void UnrefBufferCB(char *data, void *hint);
 	static long DataCB(cubeb_stream *stream, void *user, void *buffer, long nframes);
