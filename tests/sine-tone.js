@@ -22,19 +22,17 @@ DEBUG('Creating a stream...')
 var p = 0;
 var k = Math.PI * 2 * 440 / SAMPLE_RATE;
 
-function datacb (data, size) {
-	ASSERT(data instanceof Buffer, "data is not a buffer");
-
+function datacb (size) {
+	DEBUG('Data callback:', size);
+/*
 	for (var i=0; i<size; i++, p++) {
 		data.writeInt16LE(~~(16000 * Math.sin(k * p), i));
 	}
-
-	return size;
+*/
 }
 
 function statecb (state) {
 	DEBUG('State changed', state)
-	return Cubeb.CUBEB_OK;
 }
 
 var stream = new CUBEB.Stream(
