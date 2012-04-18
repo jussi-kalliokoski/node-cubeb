@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <node.h>
 #include <node_buffer.h>
+#include <uv.h>
 #include <cubeb/cubeb.h>
 
 #include "stream.h"
@@ -178,22 +179,100 @@ Handle<Value> CubebStream::Start (const Arguments &args) {
 void CubebStream::UnrefBufferCB (char *data, void *hint) {}
 
 long CubebStream::DataCB (cubeb_stream *stream, void *user, void *buffer, long nframes) {
-	struct CubebStream::cb_user_data *u = (struct CubebStream::cb_user_data *)user;
+	cb_user_data *u = (cb_user_data *)user;
 
-	/* TODO: Invoke callback and fill data here */
+	CubebStream *cs = u->stream;
+
+	check_malloc (req, cs_work_req) {
+		fprintf(stderr, "FATAL ERROR: CubebStream work type allocation failed.\n");
+		return 0;
+	}
+
+	check_malloc (user_data, cs_datacb_userdata) {
+		fprintf(stderr, "FATAL ERROR: CubebStream userdata allocation failed.\n");
+		return 0;
+	}
+
+	user_data->buffer = buffer;
+	user_data->nframes = nframes;
+
+	req->stream = cs;
+	req->user_data = (void*) user_data;
+	req->type = kDataCallback;
+
+	uv_queue_work(uv_default_loop(), &req->w, DoWork, AfterWork);
+
+	/* TODO: Write frames written from JavaScript */
 
 	return nframes;
 }
 
 int CubebStream::StateCB (cubeb_stream *stream, void *user, cubeb_state state) {
-	struct CubebStream::cb_user_data *u = (struct CubebStream::cb_user_data *)user;
+	cb_user_data *u = (cb_user_data *)user;
 
 	CubebStream *cs = u->stream;
-	cs->state = state;
 
-	/* TODO: Invoke callback */
+	check_malloc (req, cs_work_req) {
+		fprintf(stderr, "FATAL ERROR: CubebStream work type allocation failed.\n");
+		return CUBEB_STATE_ERROR;
+	}
+
+	check_malloc (user_data, cs_statecb_userdata) {
+		fprintf(stderr, "FATAL ERROR: CubebStream userdata allocation failed.\n");
+		return CUBEB_STATE_ERROR;
+	}
+
+	cs->state = state;
+	user_data->state = state;
+
+	req->stream = cs;
+	req->user_data = (void*) user_data;
+	req->type = kStateCallback;
+
+	uv_queue_work(uv_default_loop(), &req->w, DoWork, AfterWork);
 
 	return CUBEB_OK;
+}
+
+void CubebStream::DoWork (uv_work_t* work) {
+}
+
+void CubebStream::AfterWork (uv_work_t* work) {
+	cs_work_req *u = container_of(work, cs_work_req, w);
+
+	CubebStream *cs = u->stream;
+
+	HandleScope scope;
+
+	TryCatch try_catch;
+
+	Handle<Value> argv[1];
+
+	cs_statecb_userdata *uscd;
+	cs_datacb_userdata *usdd;
+
+	switch (u->type) {
+	case kStateCallback:
+		uscd = (cs_statecb_userdata *) u->user_data;
+
+		argv[0] = Number::New(uscd->state);
+		cs->statecb->Call(cs->handle_, 1, argv);
+		break;
+	case kDataCallback:
+		usdd = (cs_datacb_userdata *) u->user_data;
+
+		argv[0] = Number::New(usdd->nframes);
+		cs->datacb->Call(cs->handle_, 1, argv);
+		break;
+	default:
+		/* Something went wrong. Oh well... */
+		return;
+	}
+
+	if (try_catch.HasCaught()) {
+		FatalException(try_catch);
+		return;
+	}
 }
 
 Persistent<FunctionTemplate> CubebStream::constructor_template;

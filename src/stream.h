@@ -4,6 +4,7 @@
 #include <node.h>
 #include <node_buffer.h>
 #include <cubeb/cubeb.h>
+#include <uv.h>
 
 #include "context.h"
 
@@ -12,6 +13,27 @@ class CubebStream : public node::ObjectWrap {
 public:
 	struct cb_user_data {
 		CubebStream *stream;
+	};
+
+	enum cs_work_type {
+		kStateCallback,
+		kDataCallback
+	};
+
+	struct cs_work_req {
+		CubebStream *stream;
+		uv_work_t w;
+		enum cs_work_type type;
+		void *user_data;
+	};
+
+	struct cs_statecb_userdata {
+		cubeb_state state;
+	};
+
+	struct cs_datacb_userdata {
+		void *buffer;
+		long nframes;
 	};
 
 	cubeb *ctx;
@@ -50,6 +72,9 @@ public:
 	static void UnrefBufferCB(char *data, void *hint);
 	static long DataCB(cubeb_stream *stream, void *user, void *buffer, long nframes);
 	static int StateCB(cubeb_stream *stream, void *user, cubeb_state state);
+
+	static void DoWork (uv_work_t* work);
+	static void AfterWork (uv_work_t* work);
 };
 
 #endif
