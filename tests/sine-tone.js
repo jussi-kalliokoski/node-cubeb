@@ -23,12 +23,17 @@ var p = 0;
 var k = Math.PI * 2 * 440 / SAMPLE_RATE;
 
 function datacb (size) {
-	DEBUG('Data callback:', size);
-/*
-	for (var i=0; i<size; i++, p++) {
-		data.writeInt16LE(~~(16000 * Math.sin(k * p), i));
+	DEBUG('Data callback:', size)
+
+	ASSERT(size > 0, "Size is not positive")
+
+	var data = new Buffer(size * 2);
+
+	for (var i=0; i<size; i+=2, p++) {
+		data.writeInt16LE(~~(16000 * Math.sin(k * p)), i);
 	}
-*/
+
+	stream.write(data);
 }
 
 function statecb (state) {

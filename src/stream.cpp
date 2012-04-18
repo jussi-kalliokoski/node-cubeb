@@ -57,6 +57,8 @@ CubebStream::~CubebStream () {
 }
 
 int CubebStream::stop () {
+	if (stream == NULL || state == CUBEB_STATE_ERROR) return CUBEB_OK;
+
 	int r = cubeb_stream_stop(stream);
 	Unref();
 
@@ -64,6 +66,8 @@ int CubebStream::stop () {
 }
 
 int CubebStream::start () {
+	if (stream == NULL || state == CUBEB_STATE_ERROR) return CUBEB_OK;
+
 	int r = cubeb_stream_start(stream);
 	Ref();
 
@@ -80,6 +84,7 @@ void CubebStream::Initialize (Handle<Object> target) {
 
 	NODE_SET_PROTOTYPE_METHOD(constructor_template, "stop", Stop);
 	NODE_SET_PROTOTYPE_METHOD(constructor_template, "start", Start);
+	NODE_SET_PROTOTYPE_METHOD(constructor_template, "write", Write);
 	SET_V8_PROTOTYPE_GETTER(constructor_template, "state", GetState);
 	target->Set(String::NewSymbol("Stream"), constructor_template->GetFunction());
 }
@@ -172,6 +177,15 @@ Handle<Value> CubebStream::Start (const Arguments &args) {
 	if (cs->start() != CUBEB_OK) {
 		return ThrowException(Exception::Error(String::New("Could not start the stream")));
 	}
+
+	return Undefined();
+}
+
+Handle<Value> CubebStream::Write (const Arguments &args) {
+	HandleScope scope;
+
+	CubebStream *cs = ObjectWrap::Unwrap<CubebStream>(args.This());
+
 
 	return Undefined();
 }
