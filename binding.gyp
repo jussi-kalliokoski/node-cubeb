@@ -1,6 +1,6 @@
 {
   "targets": [{
-    "target_name": "binding",
+    "target_name": "node-cubeb",
     "sources": [
       "src/common.cpp",
       "src/constants.cpp",
