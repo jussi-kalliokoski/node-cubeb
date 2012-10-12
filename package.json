@@ -29,10 +29,6 @@
 	},
 
 	"engines": {
-		"node": ">=0.6.0"
-	},
-
-	"scripts": {
-		"install": "node-waf configure build"
+		"node": ">=0.8.0"
 	}
 }
