@@ -221,19 +221,19 @@ long CubebStream::DataCB (cubeb_stream *stream, void *user, void *buffer, long n
 	return nframes;
 }
 
-int CubebStream::StateCB (cubeb_stream *stream, void *user, cubeb_state state) {
+void CubebStream::StateCB (cubeb_stream *stream, void *user, cubeb_state state) {
 	cb_user_data *u = (cb_user_data *)user;
 
 	CubebStream *cs = u->stream;
 
 	check_malloc (req, cs_work_req) {
 		fprintf(stderr, "FATAL ERROR: CubebStream work type allocation failed.\n");
-		return CUBEB_STATE_ERROR;
+		return;
 	}
 
 	check_malloc (user_data, cs_statecb_userdata) {
 		fprintf(stderr, "FATAL ERROR: CubebStream userdata allocation failed.\n");
-		return CUBEB_STATE_ERROR;
+		return;
 	}
 
 	cs->state = state;
@@ -245,7 +245,7 @@ int CubebStream::StateCB (cubeb_stream *stream, void *user, cubeb_state state) {
 
 	uv_queue_work(uv_default_loop(), &req->w, DoWork, AfterWork);
 
-	return CUBEB_OK;
+	return;
 }
 
 void CubebStream::DoWork (uv_work_t* work) {

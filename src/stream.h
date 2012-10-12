@@ -72,7 +72,7 @@ public:
 
 	static void UnrefBufferCB(char *data, void *hint);
 	static long DataCB(cubeb_stream *stream, void *user, void *buffer, long nframes);
-	static int StateCB(cubeb_stream *stream, void *user, cubeb_state state);
+	static void StateCB(cubeb_stream *stream, void *user, cubeb_state state);
 
 	static void DoWork (uv_work_t* work);
 	static void AfterWork (uv_work_t* work);
