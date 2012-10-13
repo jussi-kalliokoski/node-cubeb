@@ -186,8 +186,13 @@ Handle<Value> CubebStream::Start (const Arguments &args) {
 Handle<Value> CubebStream::Write (const Arguments &args) {
 	HandleScope scope;
 
+	if (!node::Buffer::HasInstance(args[0])) {
+		return ThrowException(Exception::Error(
+			String::New("Invalid arguments.")));
+	}
+
 	CubebStream *cs = ObjectWrap::Unwrap<CubebStream>(args.This());
-	node::Buffer *buf = ObjectWrap::Unwrap<node::Buffer>(args[0]->ToObject());
+	Local<Object> buf = args[0]->ToObject();
 
 	check_malloc (csbuf, cs_buffer) {
 		return ThrowException(Exception::Error(String::New("Could not allocate memory.")));
