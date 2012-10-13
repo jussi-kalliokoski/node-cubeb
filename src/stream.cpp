@@ -199,8 +199,10 @@ Handle<Value> CubebStream::Write (const Arguments &args) {
 	}
 
 	csbuf->nframes = node::Buffer::Length(buf);
-	csbuf->buffer = node::Buffer::Data(buf);
+	csbuf->buffer = (char*) malloc(csbuf->nframes);
 	csbuf->index = 0;
+
+	memcpy(csbuf->buffer, node::Buffer::Data(buf), csbuf->nframes);
 
 	if (cs->last_buffer == NULL) {
 		cs->first_buffer = csbuf;
@@ -229,18 +231,18 @@ long get_frame_size (cubeb_sample_format fmt) {
 }
 
 long CubebStream::DataCB (cubeb_stream *stream, void *user, void *buffer, long nframes) {
+fprintf(stderr, "lollerz");
 	cb_user_data *u = (cb_user_data *)user;
 	CubebStream *cs = u->stream;
-	long lframes = get_frame_size(cs->sampleFormat) * nframes;
+	long lframes = nframes;
 	long n = 0;
 	char *outbuf = (char *)buffer;
 
 	while (cs->first_buffer != NULL) {
 		cs_buffer *b = cs->first_buffer;
-		char *inbuf = (char *)b->buffer;
 
 		while (b->index < b->nframes && n < lframes) {
-			outbuf[n] = inbuf[b->index];
+			outbuf[n] = b->buffer[b->index];
 
 			b->index++;
 			n++;
@@ -248,12 +250,12 @@ long CubebStream::DataCB (cubeb_stream *stream, void *user, void *buffer, long n
 
 		if (b->index != b->nframes) break;
 
+		cs->first_buffer = b->next;
+
 		if (b->next == NULL) {
-			cs->first_buffer = NULL;
 			cs->last_buffer = NULL;
-		} else {
-			cs->first_buffer = b->next;
 		}
+
 		free(b);
 	}
 
@@ -276,7 +278,7 @@ long CubebStream::DataCB (cubeb_stream *stream, void *user, void *buffer, long n
 
 	uv_queue_work(uv_default_loop(), &req->w, DoWork, AfterWork);
 
-	return n / get_frame_size(cs->sampleFormat);
+	return nframes;
 }
 
 void CubebStream::StateCB (cubeb_stream *stream, void *user, cubeb_state state) {

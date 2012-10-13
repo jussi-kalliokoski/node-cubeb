@@ -37,7 +37,7 @@ public:
 	};
 
 	struct cs_buffer {
-		void *buffer;
+		char *buffer;
 		long nframes;
 		long index;
 		cs_buffer *next;
