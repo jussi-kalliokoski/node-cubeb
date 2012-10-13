@@ -23,7 +23,9 @@ bufferSize(bs),
 latency(lt),
 state(CUBEB_STATE_ERROR),
 statecb(sstatecb),
-datacb(ddatacb) {
+datacb(ddatacb),
+first_buffer(NULL),
+last_buffer(NULL) {
 	cubeb_stream_params params;
 
 	params.format = sampleFormat;
@@ -185,17 +187,70 @@ Handle<Value> CubebStream::Write (const Arguments &args) {
 	HandleScope scope;
 
 	CubebStream *cs = ObjectWrap::Unwrap<CubebStream>(args.This());
+	node::Buffer *buf = ObjectWrap::Unwrap<node::Buffer>(args[0]->ToObject());
 
+	check_malloc (csbuf, cs_buffer) {
+		return ThrowException(Exception::Error(String::New("Could not allocate memory.")));
+	}
+
+	csbuf->nframes = node::Buffer::Length(buf);
+	csbuf->buffer = node::Buffer::Data(buf);
+	csbuf->index = 0;
+
+	if (cs->last_buffer == NULL) {
+		cs->first_buffer = csbuf;
+		cs->last_buffer = csbuf;
+	} else {
+		cs->last_buffer->next = csbuf;
+		cs->last_buffer = csbuf;
+	}
 
 	return Undefined();
 }
 
 void CubebStream::UnrefBufferCB (char *data, void *hint) {}
 
+long get_frame_size (cubeb_sample_format fmt) {
+	switch (fmt) {
+	case CUBEB_SAMPLE_S16LE:
+	case CUBEB_SAMPLE_S16BE:
+		return 2;
+	case CUBEB_SAMPLE_FLOAT32LE:
+	case CUBEB_SAMPLE_FLOAT32BE:
+		return 4;
+	}
+
+	return 1;
+}
+
 long CubebStream::DataCB (cubeb_stream *stream, void *user, void *buffer, long nframes) {
 	cb_user_data *u = (cb_user_data *)user;
-
 	CubebStream *cs = u->stream;
+	long lframes = get_frame_size(cs->sampleFormat) * nframes;
+	long n = 0;
+	char *outbuf = (char *)buffer;
+
+	while (cs->first_buffer != NULL) {
+		cs_buffer *b = cs->first_buffer;
+		char *inbuf = (char *)b->buffer;
+
+		while (b->index < b->nframes && n < lframes) {
+			outbuf[n] = inbuf[b->index];
+
+			b->index++;
+			n++;
+		}
+
+		if (b->index != b->nframes) break;
+
+		if (b->next == NULL) {
+			cs->first_buffer = NULL;
+			cs->last_buffer = NULL;
+		} else {
+			cs->first_buffer = b->next;
+		}
+		free(b);
+	}
 
 	check_malloc (req, cs_work_req) {
 		fprintf(stderr, "FATAL ERROR: CubebStream work type allocation failed.\n");
@@ -216,9 +271,7 @@ long CubebStream::DataCB (cubeb_stream *stream, void *user, void *buffer, long n
 
 	uv_queue_work(uv_default_loop(), &req->w, DoWork, AfterWork);
 
-	/* TODO: Write frames written from JavaScript */
-
-	return nframes;
+	return n / get_frame_size(cs->sampleFormat);
 }
 
 void CubebStream::StateCB (cubeb_stream *stream, void *user, cubeb_state state) {

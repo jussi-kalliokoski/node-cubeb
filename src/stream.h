@@ -36,6 +36,13 @@ public:
 		long nframes;
 	};
 
+	struct cs_buffer {
+		void *buffer;
+		long nframes;
+		long index;
+		cs_buffer *next;
+	};
+
 	cubeb *ctx;
 	cubeb_stream *stream;
 
@@ -53,6 +60,8 @@ public:
 	int error_code;
 
 	struct cb_user_data *user_data;
+	struct cs_buffer *first_buffer;
+	struct cs_buffer *last_buffer;
 
 	CubebStream(cubeb *cctx, const char *nname, cubeb_sample_format sf, unsigned int cc, unsigned int sr, unsigned int bs, unsigned int lt,
 		v8::Persistent<v8::Function> ddatacb, v8::Persistent<v8::Function> sstatecb);
