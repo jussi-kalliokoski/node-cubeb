@@ -14,6 +14,11 @@
           'libraries': ['-lcubeb', '-lpulse']
         }
       }
+    ], ['OS=="mac"', {
+        'link_settings': {
+          'libraries': ['-lcubeb', 'AudioToolbox.framework']
+        }
+      }
     ]]
   }]
 }
