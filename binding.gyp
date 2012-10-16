@@ -11,12 +11,12 @@
     'conditions': [
       ['OS=="linux"', {
         'link_settings': {
-          'libraries': ['-lcubeb', '-lpulse']
+          'libraries': ['-lcubeb']
         }
       }
     ], ['OS=="mac"', {
         'link_settings': {
-          'libraries': ['-lcubeb', 'AudioToolbox.framework']
+          'libraries': ['-lcubeb']
         }
       }
     ]]
