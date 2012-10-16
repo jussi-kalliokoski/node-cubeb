@@ -13,6 +13,7 @@ DEBUG('Creating a context...')
 
 var ctx = new CUBEB.Context(CTX_NAME);
 
+DEBUG('Using backend', JSON.stringify(ctx.backendID))
 DEBUG('Asserting context properties...')
 
 ASSERT(ctx.name === CTX_NAME, "(context) name doesn't match")
@@ -27,9 +28,9 @@ function datacb (size) {
 
 	ASSERT(size > 0, "Size is not positive")
 
-	var data = new Buffer(size * 2);
+	var data = new Buffer(size * 2 * CHANNEL_COUNT);
 
-	for (var i=0; i<size; i+=2, p++) {
+	for (var i=0; i<size; i+=2*CHANNEL_COUNT, p++) {
 		data.writeInt16LE(~~(16000 * Math.sin(k * p)), i);
 	}
 

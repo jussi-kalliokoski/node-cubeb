@@ -217,31 +217,32 @@ Handle<Value> CubebStream::Write (const Arguments &args) {
 
 void CubebStream::UnrefBufferCB (char *data, void *hint) {}
 
-long get_frame_size (cubeb_sample_format fmt) {
-	switch (fmt) {
+long get_frame_size (CubebStream *cs) {
+	int n = cs->channelCount;
+
+	switch (cs->sampleFormat) {
 	case CUBEB_SAMPLE_S16LE:
 	case CUBEB_SAMPLE_S16BE:
-		return 2;
+		return 2 * n;
 	case CUBEB_SAMPLE_FLOAT32LE:
 	case CUBEB_SAMPLE_FLOAT32BE:
-		return 4;
+		return 4 * n;
 	}
 
-	return 1;
+	return 1 * n;
 }
 
 long CubebStream::DataCB (cubeb_stream *stream, void *user, void *buffer, long nframes) {
-fprintf(stderr, "lollerz");
 	cb_user_data *u = (cb_user_data *)user;
 	CubebStream *cs = u->stream;
-	long lframes = nframes;
+	long size = get_frame_size(cs) * nframes;
 	long n = 0;
 	char *outbuf = (char *)buffer;
 
 	while (cs->first_buffer != NULL) {
 		cs_buffer *b = cs->first_buffer;
 
-		while (b->index < b->nframes && n < lframes) {
+		while (b->index < b->nframes && n < size) {
 			outbuf[n] = b->buffer[b->index];
 
 			b->index++;
@@ -283,7 +284,6 @@ fprintf(stderr, "lollerz");
 
 void CubebStream::StateCB (cubeb_stream *stream, void *user, cubeb_state state) {
 	cb_user_data *u = (cb_user_data *)user;
-
 	CubebStream *cs = u->stream;
 
 	check_malloc (req, cs_work_req) {

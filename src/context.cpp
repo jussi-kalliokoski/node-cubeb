@@ -46,6 +46,8 @@ Handle<Value> CubebContext::New (const Arguments &args) {
 	}
 
 	DEFINE_V8_CONST(args.This(), "name", nodecubeb->name, String);
+	DEFINE_V8_CONST(args.This(), "backendID",
+		cubeb_get_backend_id(nodecubeb->ctx), String);
 
 	nodecubeb->Wrap(args.This());
 
