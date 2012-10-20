@@ -87,6 +87,7 @@ void CubebStream::Initialize (Handle<Object> target) {
 	NODE_SET_PROTOTYPE_METHOD(constructor_template, "stop", Stop);
 	NODE_SET_PROTOTYPE_METHOD(constructor_template, "start", Start);
 	NODE_SET_PROTOTYPE_METHOD(constructor_template, "write", Write);
+	NODE_SET_PROTOTYPE_METHOD(constructor_template, "release", Release);
 	SET_V8_PROTOTYPE_GETTER(constructor_template, "state", GetState);
 	target->Set(String::NewSymbol("Stream"), constructor_template->GetFunction());
 }
@@ -198,11 +199,10 @@ Handle<Value> CubebStream::Write (const Arguments &args) {
 		return ThrowException(Exception::Error(String::New("Could not allocate memory.")));
 	}
 
-	csbuf->nframes = node::Buffer::Length(buf);
-	csbuf->buffer = (char*) malloc(csbuf->nframes);
-	csbuf->index = 0;
+	csbuf->length = node::Buffer::Length(buf);
+	csbuf->buffer = (char*) malloc(csbuf->length);
 
-	memcpy(csbuf->buffer, node::Buffer::Data(buf), csbuf->nframes);
+	memcpy(csbuf->buffer, node::Buffer::Data(buf), csbuf->length);
 
 	if (cs->last_buffer == NULL) {
 		cs->first_buffer = csbuf;
@@ -211,6 +211,27 @@ Handle<Value> CubebStream::Write (const Arguments &args) {
 		cs->last_buffer->next = csbuf;
 		cs->last_buffer = csbuf;
 	}
+
+	return Undefined();
+}
+
+Handle<Value> CubebStream::Release (const Arguments &args) {
+	HandleScope scope;
+
+	CubebStream *cs = ObjectWrap::Unwrap<CubebStream>(args.This());
+
+	cs_buffer *b = cs->first_buffer;
+
+	while (b != NULL && !b->length) {
+		cs_buffer *bb = b;
+		b = b->next;
+
+		free(bb);
+	}
+
+	cs->first_buffer = b;
+
+	if (b == NULL) cs->last_buffer = NULL;
 
 	return Undefined();
 }
@@ -239,25 +260,23 @@ long CubebStream::DataCB (cubeb_stream *stream, void *user, void *buffer, long n
 	long n = 0;
 	char *outbuf = (char *)buffer;
 
-	while (cs->first_buffer != NULL) {
-		cs_buffer *b = cs->first_buffer;
+	cs_buffer *b = cs->first_buffer;
 
-		while (b->index < b->nframes && n < size) {
-			outbuf[n] = b->buffer[b->index];
+	while (b != NULL && n < size) {
+		long c = b->length;
 
-			b->index++;
-			n++;
-		}
+		if (!c) goto next;
 
-		if (b->index != b->nframes) break;
+		if (size - n < c) c = size - n;
 
-		cs->first_buffer = b->next;
+		memcpy(outbuf, b->buffer, c);
 
-		if (b->next == NULL) {
-			cs->last_buffer = NULL;
-		}
+		n += c;
+		outbuf += c;
+		b->buffer += c;
+		b->length -= c;
 
-		free(b);
+		next: b = b->next;
 	}
 
 	check_malloc (req, cs_work_req) {

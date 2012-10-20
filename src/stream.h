@@ -38,8 +38,7 @@ public:
 
 	struct cs_buffer {
 		char *buffer;
-		long nframes;
-		long index;
+		long length;
 		cs_buffer *next;
 	};
 
@@ -76,6 +75,7 @@ public:
 	static v8::Handle<v8::Value> Start (const v8::Arguments &args);
 	static v8::Handle<v8::Value> Stop (const v8::Arguments &args);
 	static v8::Handle<v8::Value> Write (const v8::Arguments &args);
+	static v8::Handle<v8::Value> Release (const v8::Arguments &args);
 
 	static v8::Handle<v8::Value> GetState (v8::Local<v8::String> property, const v8::AccessorInfo &info);
 

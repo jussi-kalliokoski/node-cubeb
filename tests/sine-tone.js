@@ -35,6 +35,7 @@ function datacb (size) {
 	}
 
 	stream.write(data);
+	stream.release();
 }
 
 function statecb (state) {
