@@ -61,6 +61,7 @@ public:
 	struct cb_user_data *user_data;
 	struct cs_buffer *first_buffer;
 	struct cs_buffer *last_buffer;
+	int active;
 
 	CubebStream(cubeb *cctx, const char *nname, cubeb_sample_format sf, unsigned int cc, unsigned int sr, unsigned int bs, unsigned int lt,
 		v8::Persistent<v8::Function> ddatacb, v8::Persistent<v8::Function> sstatecb);
@@ -68,6 +69,7 @@ public:
 
 	int stop();
 	int start();
+	void release();
 
 	static void Initialize (v8::Handle<v8::Object> target);
 

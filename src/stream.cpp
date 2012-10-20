@@ -15,6 +15,7 @@ CubebStream::CubebStream (cubeb *cctx, const char *nname, cubeb_sample_format sf
 		unsigned int cc, unsigned int sr, unsigned int bs, unsigned int lt,
 		Persistent<Function> ddatacb, Persistent<Function> sstatecb) :
 ctx(cctx),
+stream(NULL),
 name(nname),
 sampleFormat(sf),
 channelCount(cc),
@@ -25,7 +26,8 @@ state(CUBEB_STATE_ERROR),
 statecb(sstatecb),
 datacb(ddatacb),
 first_buffer(NULL),
-last_buffer(NULL) {
+last_buffer(NULL),
+active(0) {
 	cubeb_stream_params params;
 
 	params.format = sampleFormat;
@@ -54,26 +56,47 @@ CubebStream::~CubebStream () {
 		free(user_data);
 	}
 
+	release();
+
 	datacb.Dispose();
 	statecb.Dispose();
 }
 
 int CubebStream::stop () {
-	if (stream == NULL || state == CUBEB_STATE_ERROR) return CUBEB_OK;
+	if (stream == NULL || !active || state == CUBEB_STATE_ERROR) return CUBEB_OK;
 
 	int r = cubeb_stream_stop(stream);
 	Unref();
+
+	active = 0;
 
 	return r;
 }
 
 int CubebStream::start () {
-	if (stream == NULL || state == CUBEB_STATE_ERROR) return CUBEB_OK;
+	if (stream == NULL || active) return CUBEB_OK;
 
 	int r = cubeb_stream_start(stream);
 	Ref();
 
+	active = 1;
+
 	return r;
+}
+
+void CubebStream::release () {
+	cs_buffer *b = first_buffer;
+
+	while (b != NULL && !b->length) {
+		cs_buffer *bb = b;
+		b = b->next;
+
+		free(bb);
+	}
+
+	first_buffer = b;
+
+	if (b == NULL) last_buffer = NULL;
 }
 
 void CubebStream::Initialize (Handle<Object> target) {
@@ -220,18 +243,7 @@ Handle<Value> CubebStream::Release (const Arguments &args) {
 
 	CubebStream *cs = ObjectWrap::Unwrap<CubebStream>(args.This());
 
-	cs_buffer *b = cs->first_buffer;
-
-	while (b != NULL && !b->length) {
-		cs_buffer *bb = b;
-		b = b->next;
-
-		free(bb);
-	}
-
-	cs->first_buffer = b;
-
-	if (b == NULL) cs->last_buffer = NULL;
+	cs->release();
 
 	return Undefined();
 }
