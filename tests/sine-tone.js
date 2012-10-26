@@ -30,7 +30,7 @@ function datacb (size) {
 
 	var data = new Buffer(size * 2 * CHANNEL_COUNT);
 
-	for (var i=0; i<size; i+=2*CHANNEL_COUNT, p++) {
+	for (var i=0; i<size*2; i+=2*CHANNEL_COUNT, p++) {
 		data.writeInt16LE(~~(16000 * Math.sin(k * p)), i);
 	}
 
@@ -39,7 +39,7 @@ function datacb (size) {
 }
 
 function statecb (state) {
-	DEBUG('State changed', state)
+	DEBUG('State changed:', state)
 }
 
 var stream = new CUBEB.Stream(
