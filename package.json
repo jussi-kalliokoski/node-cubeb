@@ -30,5 +30,7 @@
 
 	"engines": {
 		"node": ">=0.8.0"
-	}
+	},
+
+	"main": "./build/Release/node-cubeb"
 }
