@@ -38,6 +38,8 @@ function stateCallback (stateID) {
 function dataCallback (frameCount) {
 	/* int16 is 2 bytes, doh */
 	stream.write(new Buffer(frameCount * 2))
+	/* releases used buffers */
+	stream.release()
 
 	/*
 	 note that we get the noise for free because
@@ -57,5 +59,7 @@ var stream = new CUBEB.Stream(
 	datacb,
 	statecb
 )
+
+stream.start()
 
 ```
