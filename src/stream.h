@@ -33,6 +33,7 @@ public:
 
 	struct cs_datacb_userdata {
 		long nframes;
+		long buffer_status;
 	};
 
 	struct cs_buffer {
@@ -69,6 +70,7 @@ public:
 	int stop();
 	int start();
 	void release();
+	void requestFrames(long amount, long bufferStatus);
 
 	static void Initialize (v8::Handle<v8::Object> target);
 

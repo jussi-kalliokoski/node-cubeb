@@ -103,6 +103,27 @@ void CubebStream::release () {
 	if (b == NULL) last_buffer = NULL;
 }
 
+void CubebStream::requestFrames (long amount, long bufferStatus) {
+	check_malloc (req, cs_work_req) {
+		fprintf(stderr, "FATAL ERROR: CubebStream work type allocation failed.\n");
+		return;
+	}
+
+	check_malloc (user_data, cs_datacb_userdata) {
+		fprintf(stderr, "FATAL ERROR: CubebStream userdata allocation failed.\n");
+		return;
+	}
+
+	user_data->nframes = amount;
+	user_data->buffer_status = bufferStatus;
+
+	req->stream = this;
+	req->user_data = (void*) user_data;
+	req->type = kDataCallback;
+
+	uv_queue_work(uv_default_loop(), &req->w, DoWork, AfterWork);
+}
+
 void CubebStream::Initialize (Handle<Object> target) {
 	HandleScope scope;
 
@@ -295,23 +316,18 @@ long CubebStream::DataCB (cubeb_stream *stream, void *user, void *buffer, long n
 		next: b = b->next;
 	}
 
-	check_malloc (req, cs_work_req) {
-		fprintf(stderr, "FATAL ERROR: CubebStream work type allocation failed.\n");
-		return 0;
+	long bufferStatus = (n - size) / get_frame_size(cs) - nframes;
+
+	if (!cs->bufferSize) {
+		cs->requestFrames(nframes, bufferStatus);
+	} else {
+		long remaining = -bufferStatus;
+
+		while (remaining > 0) {
+			cs->requestFrames(cs->bufferSize, bufferStatus);
+			remaining -= cs->bufferSize;
+		}
 	}
-
-	check_malloc (user_data, cs_datacb_userdata) {
-		fprintf(stderr, "FATAL ERROR: CubebStream userdata allocation failed.\n");
-		return 0;
-	}
-
-	user_data->nframes = nframes;
-
-	req->stream = cs;
-	req->user_data = (void*) user_data;
-	req->type = kDataCallback;
-
-	uv_queue_work(uv_default_loop(), &req->w, DoWork, AfterWork);
 
 	return nframes;
 }
