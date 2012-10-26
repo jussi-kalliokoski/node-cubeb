@@ -305,7 +305,6 @@ long CubebStream::DataCB (cubeb_stream *stream, void *user, void *buffer, long n
 		return 0;
 	}
 
-	user_data->buffer = buffer;
 	user_data->nframes = nframes;
 
 	req->stream = cs;

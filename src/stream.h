@@ -32,7 +32,6 @@ public:
 	};
 
 	struct cs_datacb_userdata {
-		void *buffer;
 		long nframes;
 	};
 
