@@ -42,7 +42,7 @@ public:
 		cs_buffer *next;
 	};
 
-	cubeb *ctx;
+	CubebContext *ctx;
 	cubeb_stream *stream;
 
 	char const *name;
@@ -63,7 +63,7 @@ public:
 	struct cs_buffer *last_buffer;
 	int active;
 
-	CubebStream(cubeb *cctx, const char *nname, cubeb_sample_format sf, unsigned int cc, unsigned int sr, unsigned int bs, unsigned int lt,
+	CubebStream(CubebContext *cctx, const char *nname, cubeb_sample_format sf, unsigned int cc, unsigned int sr, unsigned int bs, unsigned int lt,
 		v8::Persistent<v8::Function> ddatacb, v8::Persistent<v8::Function> sstatecb);
 	~CubebStream();
 

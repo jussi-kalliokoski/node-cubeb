@@ -9,7 +9,9 @@
 using namespace v8;
 using namespace node;
 
-CubebContext::CubebContext (const char *nname) : name(nname) {
+CubebContext::CubebContext (const char *nname) :
+name(nname),
+active_stream_count(0) {
 	error_code = cubeb_init(&ctx, name);
 }
 
@@ -52,6 +54,14 @@ Handle<Value> CubebContext::New (const Arguments &args) {
 	nodecubeb->Wrap(args.This());
 
 	return args.This();
+}
+
+void CubebContext::addStream () {
+	if (!active_stream_count++) Ref();
+}
+
+void CubebContext::removeStream () {
+	if (!--active_stream_count) Unref();
 }
 
 Persistent<FunctionTemplate> CubebContext::constructor_template;

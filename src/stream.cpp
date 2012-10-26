@@ -11,7 +11,7 @@
 using namespace v8;
 using namespace node;
 
-CubebStream::CubebStream (cubeb *cctx, const char *nname, cubeb_sample_format sf,
+CubebStream::CubebStream (CubebContext *cctx, const char *nname, cubeb_sample_format sf,
 		unsigned int cc, unsigned int sr, unsigned int bs, unsigned int lt,
 		Persistent<Function> ddatacb, Persistent<Function> sstatecb) :
 ctx(cctx),
@@ -42,7 +42,9 @@ active(0) {
 
 	user_data->stream = this;
 
-	error_code = cubeb_stream_init(ctx, &stream, name, params, latency, DataCB, StateCB, user_data);
+	error_code = cubeb_stream_init(ctx->ctx, &stream, name, params, latency, DataCB, StateCB, user_data);
+
+	ctx->addStream();
 }
 
 CubebStream::~CubebStream () {
@@ -60,6 +62,8 @@ CubebStream::~CubebStream () {
 
 	datacb.Dispose();
 	statecb.Dispose();
+
+	ctx->removeStream();
 }
 
 int CubebStream::stop () {
@@ -152,7 +156,7 @@ Handle<Value> CubebStream::New (const Arguments &args) {
 	Local<Function> state_cb = Local<Function>::Cast(args[8]);
 
 	CubebStream *cubebstream = new CubebStream(
-		nodecubeb->ctx,
+		nodecubeb,
 		ToCString(str),
 		sf, cc, sr, bs, lt,
 		Persistent<Function>::New(data_cb),

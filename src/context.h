@@ -11,6 +11,7 @@ class CubebContext : public node::ObjectWrap {
 public:
 	cubeb *ctx;
 	char const *name;
+	int active_stream_count;
 	int error_code;
 
 	CubebContext (const char *nname);
@@ -19,6 +20,9 @@ public:
 	static void Initialize (v8::Handle<v8::Object> target);
 
 	static v8::Handle<v8::Value> New (const v8::Arguments &args);
+
+	void addStream();
+	void removeStream();
 };
 
 #endif
