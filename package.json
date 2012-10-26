@@ -1,7 +1,6 @@
 {
-	"name": "node-cubeb",
+	"name": "cubeb",
 	"version": "0.1.0",
-	"main": "node-cubeb",
 	"description": "",
 	"license": "MIT",
 
