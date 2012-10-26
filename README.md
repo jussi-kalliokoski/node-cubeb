@@ -20,6 +20,8 @@ cubeb is quite a low level library, so that applies to node-cubeb as well. cubeb
 
 ```javascript
 
+var CUBEB = require('cubeb')
+
 var SAMPLE_FORMAT = CUBEB.SAMPLE_INT16LE
 var CHANNEL_COUNT = 1
 var SAMPLE_RATE = 44100
