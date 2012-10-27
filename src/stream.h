@@ -81,6 +81,7 @@ public:
 	static v8::Handle<v8::Value> Release (const v8::Arguments &args);
 
 	static v8::Handle<v8::Value> GetState (v8::Local<v8::String> property, const v8::AccessorInfo &info);
+	static v8::Handle<v8::Value> GetPosition (v8::Local<v8::String> property, const v8::AccessorInfo &info);
 
 	static void UnrefBufferCB(char *data, void *hint);
 	static long DataCB(cubeb_stream *stream, void *user, void *buffer, long nframes);

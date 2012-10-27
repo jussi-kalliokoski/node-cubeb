@@ -36,6 +36,8 @@ function datacb (size) {
 
 	stream.write(data);
 	stream.release();
+
+	DEBUG('Playback position:', stream.position);
 }
 
 function statecb (state) {

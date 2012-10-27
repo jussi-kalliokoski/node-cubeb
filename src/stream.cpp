@@ -137,6 +137,7 @@ void CubebStream::Initialize (Handle<Object> target) {
 	NODE_SET_PROTOTYPE_METHOD(constructor_template, "write", Write);
 	NODE_SET_PROTOTYPE_METHOD(constructor_template, "release", Release);
 	SET_V8_PROTOTYPE_GETTER(constructor_template, "state", GetState);
+	SET_V8_PROTOTYPE_GETTER(constructor_template, "position", GetPosition);
 	target->Set(String::NewSymbol("Stream"), constructor_template->GetFunction());
 }
 
@@ -206,6 +207,20 @@ Handle<Value> CubebStream::GetState (Local<String> property, const AccessorInfo&
 	CubebStream *cs = ObjectWrap::Unwrap<CubebStream>(self);
 
 	return Integer::New(cs->state);
+}
+
+Handle<Value> CubebStream::GetPosition (Local<String> property, const AccessorInfo& info) {
+	Local<Object> self = info.Holder();
+
+	CubebStream *cs = ObjectWrap::Unwrap<CubebStream>(self);
+
+	uint64_t position[0];
+
+	if (cubeb_stream_get_position(cs->stream, position) != CUBEB_OK) {
+		position[0] = 0;
+	}
+
+	return Integer::New(position[0]);
 }
 
 Handle<Value> CubebStream::Stop (const Arguments &args) {
