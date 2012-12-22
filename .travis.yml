@@ -1,0 +1,17 @@
+before_install:
+ - sudo aptitude -y -q install curl make libgc-dev libasound2-dev
+ - git clone --depth=1 git://github.com/kinetiknz/cubeb.git
+ - mkdir prefix
+ - export PREFIX=$PWD/prefix
+ - export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$PREFIX/lib/pkgconfig
+ - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PREFIX/lib
+ - cd cubeb
+ - autoreconf --install
+ - ./configure --prefix=$PREFIX
+ - make && make install
+ - cd ..
+
+language: node_js
+node_js:
+  - 0.8
+  - 0.9
