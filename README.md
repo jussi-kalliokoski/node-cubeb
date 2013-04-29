@@ -8,6 +8,10 @@ The purpose of this module is to allow you to write to the user's soundcard.
 
 You need to install [cubeb](https://github.com/kinetiknz/cubeb) in order for node-cubeb to work. Refer to directions provided in cubeb on how to do that.
 
+IMPORTANT:
+
+If you're on Linux, make sure that you [have ``` /usr/local/lib ``` in your library path](http://stackoverflow.com/questions/4743233/is-usr-local-lib-searched-for-shared-libraries).
+
 After installing cubeb, installing node-cubeb works like installing any other library in npm:
 
 ```
