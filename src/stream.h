@@ -87,8 +87,8 @@ public:
 	static long DataCB(cubeb_stream *stream, void *user, void *buffer, long nframes);
 	static void StateCB(cubeb_stream *stream, void *user, cubeb_state state);
 
-	static void DoWork (uv_work_t* work);
-	static void AfterWork (uv_work_t* work);
+	static void DoWork (uv_work_t *work);
+	static void AfterWork (uv_work_t *work, int status);
 };
 
 #endif

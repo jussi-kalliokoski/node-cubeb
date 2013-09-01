@@ -374,10 +374,10 @@ void CubebStream::StateCB (cubeb_stream *stream, void *user, cubeb_state state) 
 	return;
 }
 
-void CubebStream::DoWork (uv_work_t* work) {
+void CubebStream::DoWork (uv_work_t *work) {
 }
 
-void CubebStream::AfterWork (uv_work_t* work) {
+void CubebStream::AfterWork (uv_work_t *work, int status) {
 	cs_work_req *u = container_of(work, cs_work_req, w);
 
 	CubebStream *cs = u->stream;
