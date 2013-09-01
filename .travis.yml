@@ -1,5 +1,5 @@
 before_install:
- - sudo aptitude -y -q install curl make libgc-dev libasound2-dev
+ - sudo apt-get -y -q install curl make libgc-dev libasound2-dev
  - git clone --depth=1 git://github.com/kinetiknz/cubeb.git
  - mkdir prefix
  - export PREFIX=$PWD/prefix
