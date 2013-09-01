@@ -3,6 +3,7 @@
 #include <node_buffer.h>
 #include <uv.h>
 #include <cubeb/cubeb.h>
+#include <string.h>
 
 #include "stream.h"
 #include "context.h"
